@@ -82,4 +82,4 @@ typedef struct
         UInt16   bg_used_dirs_count;     /* Directories count */
         UInt16   bg_pad;
         UInt32   bg_reserved[3];
-}Ext2GroupDescriptorTable;
+}Ext2GroupDescriptor;
