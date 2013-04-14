@@ -34,24 +34,8 @@ typedef struct
 	UInt32   s_rev_level;            /* Revision level */
 	UInt16   s_def_resuid;           /* Default uid for reserved blocks */
 	UInt16   s_def_resgid;           /* Default gid for reserved blocks */
-	UInt32   s_reserved[256*2+235];        /* Padding to the end of the block */
+	UInt32   s_reserved[256*2+235];  /* Padding to the end of the block */
 } Ext2SuperBlock;
-
-//typedef struct
-//{
-//	UInt32 s_inodes_count; //общее число inode в файловой системе;
-//	UInt32 s_blocks_count; //общее число блоков в файловой системе;
-//	UInt32 s_free_blocks_count; //количество свободных блоков;
-//	UInt32 s_free_inodes_count; //количество свободных inode;
-//	UInt32 s_first_data_block; //номер первого блока данных (номер блока, в котором находится суперблок);
-//	UInt32 s_log_block_size; //это значение используется для вычисления размера блока. Размер блока определяется по формуле: block size = 1024 << s_log_block_size;
-//	UInt32 s_blocks_per_group; //количество блоков в группе;
-//	UInt32 s_inodes_per_group; //количество inode в группе;
-//	UInt16 s_magic; //идентификатор файловой системы ext2 (сигнатура 0xEF53);
-//	UInt16 s_inode_size; //размер информационного узла (inode);
-//	UInt32 s_first_ino; //номер первого незарезервированного inode.
-//} Ext2SuperBlock;
-
 
 const UInt16 INODE_TYPE_SYMBOL_LINK = 0xA000; //символическая ссылка;
 const UInt16 INODE_TYPE_FILE = 0x8000; //обычный файл;
@@ -61,80 +45,70 @@ const UInt16 INODE_TYPE_CHAR_DEV = 0x2000; //файл символьного устройства;
 const UInt16 INODE_TYPE_FIFO = 0x1000; //канал FIFO.
 
 
-//typedef struct
-//{
-//	UInt16 i_mode; //тип файла и права доступа к нему. Тип файла определяют биты 12-15 этого поля: 
-//	UInt32 i_size; //размер в байтах;
-//	UInt32 i_atime; //время последнего доступа к файлу;
-//	UInt32 i_ctime; //время создания файла;
-//	UInt32 i_mtime; //время последней модификации;
-//	UInt32 i_blocks; //количество блоков, занимаемых файлом;
-//	UInt32 *i_block; //адреса информационных блоков (включая все косвенные ссылки).
-//} Ext2Inode;
-
-
-
-struct ext2_inode {
-        UInt16   i_mode;         /* File mode */
-        UInt16   i_uid;          /* Owner Uid */
-        UInt32   i_size;         /* Size in bytes */
-        UInt32   i_atime;        /* Access time */
-        UInt32   i_ctime;        /* Creation time */
-        UInt32   i_mtime;        /* Modification time */
-        UInt32   i_dtime;        /* Deletion Time */
-        UInt16   i_gid;          /* Group Id */
-        UInt16   i_links_count;  /* Links count */
-        UInt32   i_blocks;       /* Blocks count */
-        UInt32   i_flags;        /* File flags */
-        union {
-                struct {
-                        UInt32  l_i_reserved1;
-                } linux1;
-                struct {
-                        UInt32  h_i_translator;
-                } hurd1;
-                struct {
-                        UInt32  m_i_reserved1;
-                } masix1;
-        } osd1;                         /* OS dependent 1 */
-        UInt32   i_block[15];/* Pointers to blocks */
-        UInt32   i_version;      /* File version (for NFS) */
-        UInt32   i_file_acl;     /* File ACL */
-        UInt32   i_dir_acl;      /* Directory ACL */
-        UInt32   i_faddr;        /* Fragment address */
-        union {
-                struct {
-                        UInt8    l_i_frag;       /* Fragment number */
-                        UInt8    l_i_fsize;      /* Fragment size */
-                        UInt16   i_pad1;
-                        UInt32   l_i_reserved2[2];
-                } linux2;
-                struct {
-                        UInt8    h_i_frag;       /* Fragment number */
-                        UInt8    h_i_fsize;      /* Fragment size */
-                        UInt16   h_i_mode_high;
-                        UInt16   h_i_uid_high;
-                        UInt16   h_i_gid_high;
-                        UInt32   h_i_author;
-                } hurd2;
-                struct {
-                        UInt8    m_i_frag;       /* Fragment number */
-                        UInt8    m_i_fsize;      /* Fragment size */
-                        UInt16   m_pad1;
-                        UInt32   m_i_reserved2[2];
-                } masix2;
-        } osd2;                         /* OS dependent 2 */
-};
-
 
 typedef struct 
 {
-        UInt32   bg_block_bitmap;        /* Blocks bitmap block */
-        UInt32   bg_inode_bitmap;        /* Inodes bitmap block */
-        UInt32   bg_inode_table;         /* Inodes table block */
-        UInt16   bg_free_blocks_count;   /* Free blocks count */
-        UInt16   bg_free_inodes_count;   /* Free inodes count */
-        UInt16   bg_used_dirs_count;     /* Directories count */
-        UInt16   bg_pad;
-        UInt32   bg_reserved[3];
+	UInt32   bg_block_bitmap;        /* Blocks bitmap block */
+	UInt32   bg_inode_bitmap;        /* Inodes bitmap block */
+	UInt32   bg_inode_table;         /* Inodes table block */
+	UInt16   bg_free_blocks_count;   /* Free blocks count */
+	UInt16   bg_free_inodes_count;   /* Free inodes count */
+	UInt16   bg_used_dirs_count;     /* Directories count */
+	UInt16   bg_pad;
+	UInt32   bg_reserved[3];
 }Ext2GroupDescriptor;
+
+
+typedef struct
+{
+    UInt16   i_mode;         /* File mode */
+    UInt16   i_uid;          /* Owner Uid */
+    UInt32   i_size;         /* Size in bytes */
+    UInt32   i_atime;        /* Access time */
+    UInt32   i_ctime;        /* Creation time */
+    UInt32   i_mtime;        /* Modification time */
+    UInt32   i_dtime;        /* Deletion Time */
+    UInt16   i_gid;          /* Group Id */
+    UInt16   i_links_count;  /* Links count */
+    UInt32   i_blocks;       /* Blocks count */
+    UInt32   i_flags;        /* File flags */
+    union {
+            struct {
+                    UInt32  l_i_reserved1;
+            } linux1;
+            struct {
+                    UInt32  h_i_translator;
+            } hurd1;
+            struct {
+                    UInt32  m_i_reserved1;
+            } masix1;
+    } osd1;                         /* OS dependent 1 */
+    UInt32   i_block[15];	 /* Pointers to blocks */
+    UInt32   i_version;      /* File version (for NFS) */
+    UInt32   i_file_acl;     /* File ACL */
+    UInt32   i_dir_acl;      /* Directory ACL */
+    UInt32   i_faddr;        /* Fragment address */
+    union {
+            struct {
+                    UInt8    l_i_frag;       /* Fragment number */
+                    UInt8    l_i_fsize;      /* Fragment size */
+                    UInt16   i_pad1;
+                    UInt32   l_i_reserved2[2];
+            } linux2;
+            struct {
+                    UInt8    h_i_frag;       /* Fragment number */
+                    UInt8    h_i_fsize;      /* Fragment size */
+                    UInt16   h_i_mode_high;
+                    UInt16   h_i_uid_high;
+                    UInt16   h_i_gid_high;
+                    UInt32   h_i_author;
+            } hurd2;
+            struct {
+                    UInt8    m_i_frag;       /* Fragment number */
+                    UInt8    m_i_fsize;      /* Fragment size */
+                    UInt16   m_pad1;
+                    UInt32   m_i_reserved2[2];
+            } masix2;
+    } osd2;                         /* OS dependent 2 */
+}Ext2Inode;
+
