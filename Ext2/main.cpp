@@ -60,6 +60,10 @@ void ReadGroupDescriptor(std::vector <Ext2GroupDescriptor> &GrpDscrTbl, Ext2Grou
 	fclose(f);
 }
 
+void ReadInode(int block_num, int inode_num)
+{
+	
+}
 void main()
 {
 	//ReadFromDev(8192);
