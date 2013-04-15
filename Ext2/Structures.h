@@ -34,7 +34,9 @@ typedef struct
 	UInt32   s_rev_level;            /* Revision level */
 	UInt16   s_def_resuid;           /* Default uid for reserved blocks */
 	UInt16   s_def_resgid;           /* Default gid for reserved blocks */
-	UInt32   s_reserved[256*2+235];  /* Padding to the end of the block */
+	UInt32	 s_first_inode;			 /* First inode */
+	UInt32	 s_inode_size;			 /* Inodes size */
+	UInt32   s_reserved[256*2+233];  /* Padding to the end of the block */
 } Ext2SuperBlock;
 
 const UInt16 INODE_TYPE_SYMBOL_LINK = 0xA000; //символическая ссылка;
@@ -112,10 +114,33 @@ typedef struct
     } osd2;                         /* OS dependent 2 */
 }Ext2Inode;
 
+
+//Defined Reserved InodesConstant Name	Value	Description
+const UInt32 EXT2_BAD_INO			= 1;//	bad blocks inode
+const UInt32 EXT2_ROOT_INO 			= 2;//	root directory inode
+const UInt32 EXT2_ACL_IDX_INO		= 3;//	ACL index inode (deprecated?)
+const UInt32 EXT2_ACL_DATA_INO		= 4;//	ACL data inode (deprecated?)
+const UInt32 EXT2_BOOT_LOADER_INO	= 5;//	boot loader inode
+const UInt32 EXT2_UNDEL_DIR_INO		= 6;//	undelete directory inode
+
+
+
 typedef struct 
 {
-	UInt32   inode;                  /* Inode number */
-	UInt16   rec_len;                /* Directory entry length */
-	UInt16   name_len;               /* Name length */
-	char    name[256];    /* File name */
+	UInt32   inode;                 /* Inode number */
+	UInt16   rec_len;               /* Directory entry length */
+	UInt8   name_len;				/* Name length */
+	UInt8   file_type;				/* File type */
+	char    name[256];				/* File name */
+
 }Ext2DirEntry;
+
+//Ext2DirEntry file_types
+const UInt8 EXT2_FT_UNKNOWN	= 0;//Unknown File Type
+const UInt8 EXT2_FT_REG_FILE= 1;//	Regular File
+const UInt8 EXT2_FT_DIR		= 2;//	Directory File
+const UInt8 EXT2_FT_CHRDEV	= 3;//	Character Device
+const UInt8 EXT2_FT_BLKDEV	= 4;//	Block Device
+const UInt8 EXT2_FT_FIFO	= 5;//	Buffer File
+const UInt8 EXT2_FT_SOCK	= 6;//	Socket File
+const UInt8 EXT2_FT_SYMLINK	= 7;//	Symbolic Link

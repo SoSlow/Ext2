@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <vector>
 #include "Structures.h"
 
@@ -76,12 +77,19 @@ void ReadInodeStruct(int inode_num, Ext2Inode &inode)
 	//TODO: implement ext2_fseek() that can that
 	//r = fseek(f_dev, inode_tbl_block*BLOCK_SIZE + inode_local_num*sizeof(Ext2Inode), SEEK_SET);
 	r = fseek(f_dev, inode_tbl_block*BLOCK_SIZE, SEEK_SET);
-	for(int i = 0; i <= inode_local_num + 1; ++i)
-		r = fread(&inode, sizeof(Ext2Inode), 1, f_dev);
 
+	char *ibuf = new char[SuperBlock.s_inode_size];
+	for(int i = 0; i <= inode_local_num; ++i)
+	{
+		//cose inode size may be different, read them into buffer and copy to our 128bit structure
+		//TODO: not stupid implementation of this
+		r = fread(ibuf, SuperBlock.s_inode_size, 1, f_dev);
+	}
+	memcpy(&inode, ibuf, sizeof(Ext2Inode));
+	delete ibuf;
 }
 
-void ReadInodeData(int inode_num, char* &data)
+void ReadInodeData(UInt32 inode_num, char* &data, int &d_size)
 {
 	Ext2Inode inode;
 	ReadInodeStruct(inode_num, inode);
@@ -90,6 +98,7 @@ void ReadInodeData(int inode_num, char* &data)
 	data = new char[data_size];
 
 	//only direct links
+	//TODO: double and triple links
 	int cur = 0, size = 0;
 	for(int i = 0; i < 13 && cur < data_size; ++i)
 	{
@@ -103,19 +112,164 @@ void ReadInodeData(int inode_num, char* &data)
 		fread(data + cur, 1, size, f_dev);
 		cur += size;
 	}
+	d_size = data_size;
 }
 
 void ReadDir(int inode_num)
+{	
+	char *data, next_data;
+	int size;
+	Ext2DirEntry *direntry;
+
+	ReadInodeData(inode_num, (char *)data, size);
+	direntry = (Ext2DirEntry *)data;
+	while(direntry->file_type < 8)
+	{
+		char fname[255];
+		
+		memcpy(fname, direntry->name, direntry->name_len);
+		fname[direntry->name_len] = 0;
+
+		Ext2Inode inode;
+		ReadInodeStruct(direntry->inode, inode);
+
+		printf("%s \t%s\n", fname, direntry->file_type == EXT2_FT_DIR ? "DIR": "FILE");
+		
+		//go to the next dir entry in direntry linked list
+		direntry = (Ext2DirEntry *)((char *)direntry + direntry->rec_len);
+	}
+	delete data;
+}
+
+int GetSubdirInode(UInt32 dir_inode, const char *subdir_name)
+{
+	char *data;
+	Ext2DirEntry *direntry;
+	int size, res = -1;
+
+	ReadInodeData(dir_inode, (char *)data, size);
+	direntry = (Ext2DirEntry *)data;
+	while(direntry->file_type < 8)
+	{
+		if(direntry->file_type == EXT2_FT_DIR)
+		{
+			char dir_name[255];
+			memcpy(dir_name, direntry->name, direntry->name_len);
+			dir_name[direntry->name_len] = 0;
+			if(strcmp(subdir_name, dir_name) == 0)
+			{
+				res = direntry->inode;
+				break;
+			}
+		}
+		direntry = (Ext2DirEntry *)((char *)direntry + direntry->rec_len);
+	}
+	//free mem
+	delete data;
+
+	return res;
+}
+int GetDirInodeByName(char *path)
+{
+	char dir[255];
+	char *first, *sec;
+	int dir_inode = EXT2_ROOT_INO;
+	
+	first = path;
+	while(dir_inode != -1)
+	{
+		first = strchr(first, '\\');
+		if(first == NULL)
+		{
+			break;
+		}
+		sec = strchr(first+1, '\\');
+
+		if(sec == NULL)
+		{
+			sec = first + strlen(first);
+		}
+		strncpy(dir, first + 1, sec - first);
+		
+		first = sec;
+		if(strlen(dir) == 0) continue;
+
+		dir_inode = GetSubdirInode(dir_inode, dir);		
+	}
+	
+	return dir_inode;
+}
+
+int GetFileInode(UInt32 dir_inode, char *fname)
 {
 	Ext2DirEntry *direntry;
 	char *data;
-	ReadInodeData(inode_num, (char *)data);
+	int size, res = -1;
+
+	ReadInodeData(dir_inode, (char *)data, size);
 	direntry = (Ext2DirEntry *)data;
-	while(direntry->rec_len)
+
+	while(direntry->file_type < 8)
 	{
-		//printf("%s", 
+		if(direntry->file_type == EXT2_FT_REG_FILE)
+		{
+			char file_name[255];
+			memcpy(file_name, direntry->name, direntry->name_len);
+			file_name[direntry->name_len] = 0;
+			if(strcmp(file_name, fname) == 0)
+			{
+				res = direntry->inode;
+				break;
+			}
+		}
+
+		//go to the next dir entry in direntry linked list
+		direntry = (Ext2DirEntry *)((char *)direntry + direntry->rec_len);
 	}
 
+	//free mem
+	delete data;
+
+	return res;
+}
+
+
+void Ext2ls(char *path)
+{
+	int dir_inode = GetDirInodeByName(path);
+	if(dir_inode != -1)
+	{
+		char *data;
+		Ext2DirEntry *direntry;
+		int size, res = -1;
+
+		ReadInodeData(dir_inode, (char *)data, size);
+		direntry = (Ext2DirEntry *)data;
+		printf("%16s%16s\t%s\n", "Name", "Lehgth", "Modification time");
+		printf("%16s%16s\t%s\n", "====", "======", "=================");
+		printf("\n");
+		while(direntry->file_type < 8)
+		{
+			char fname[255];
+			Ext2Inode inode;
+			
+			memcpy(fname, direntry->name, direntry->name_len);
+			fname[direntry->name_len] = 0;
+
+			ReadInodeStruct(direntry->inode, inode);
+			printf("%16s%16d\t%s", fname, direntry->file_type == EXT2_FT_REG_FILE ? inode.i_size : 0, ctime((time_t *)&inode.i_mtime));
+
+			//go to the next dir entry in direntry linked list
+			direntry = (Ext2DirEntry *)((char *)direntry + direntry->rec_len);
+		}
+
+		delete data;
+	}
+	else
+	{
+		printf("Error. Directory \"%s\" not found\n");
+		return;
+	}
 }
 
 void main()
@@ -128,7 +282,18 @@ void main()
 		ReadGroupDescriptorTable(GrpDscrTbl);
 		
 		ReadDir(2);
+		int k, size;
+		char buf[255];
+		char *data;
 
+
+		k = GetDirInodeByName("\\lost+found");
+		k = GetFileInode(2, "hello.txt");
+		ReadInodeData(k, data, size);
+		strncpy(buf, data, size);
+		buf[size] = '\0';
+		printf("%s\n", buf);
+		Ext2ls("\\");
 
 		CloseDevice();
 	}catch(...)
