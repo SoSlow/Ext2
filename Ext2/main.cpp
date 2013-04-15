@@ -4,7 +4,7 @@
 #include <vector>
 #include "Structures.h"
 
-//global variables, must be changed by class properties
+//global variables, must be replaced by class properties
 FILE *f_dev = NULL;
 
 Ext2SuperBlock SuperBlock;
@@ -23,18 +23,16 @@ void OpenDevice(const char *dev_name)
 	if(!f_dev) throw (0);
 }
 
-
 void CloseDevice()
 {
 	fclose(f_dev);	
 }
 
-
 void ReadFromDev(const char *dev_name, int count)
 {
 	char *buf = new char[count];
 	FILE *f = fopen(dev_name, "rb");
-	FILE *fout = fopen("device.txt", "wb");
+	FILE *fout = fopen(".\\..\\..\\ext2.txt", "wb");
 	int r;
 	fread(buf, count, 1, f);
 	fwrite(buf, count, 1, fout);
@@ -49,7 +47,7 @@ void ReadSupeblock(Ext2SuperBlock &SuperBlock)
 	int r = 0;
 	//skip MBR
 	r = fseek(f_dev, 1024, SEEK_SET);
-	r = fread(&SuperBlock, sizeof(SuperBlock), 1, f_dev);
+	r = fread(&SuperBlock, sizeof(Ext2SuperBlock), 1, f_dev);
 	//printf("Readed %d bytes", r);	
 	BLOCK_SIZE = 1024 << SuperBlock.s_log_block_size;
 }
@@ -67,39 +65,69 @@ void ReadGroupDescriptorTable(Ext2GroupDescriptor* &GrpDscrTbl)
 	fread(GrpDscrTbl, sizeof(Ext2GroupDescriptor), gd_count, f_dev);
 }
 
-void GetInode(UInt32 &InodeTableAdress, UInt32 &InodeNumber)
-{
-	//Skip to inode adress
-
-
-}
-
-void ReadInode(int inode_num)
+void ReadInodeStruct(int inode_num, Ext2Inode &inode)
 {
 	int r = 0;
 	int group_num = (inode_num - 1) / SuperBlock.s_inodes_per_group;
 	int inode_local_num = (inode_num - 1) % SuperBlock.s_inodes_per_group;
-	Ext2Inode inode;
 	int inode_tbl_block = GrpDscrTbl[group_num].bg_inode_table;
 	
-	//fseek don't work with value that not divided by 512 (DEVICE_BLOCK_SIZE)
+	//fseek does't work with value that not divided by 512 (DEVICE_BLOCK_SIZE)
 	//TODO: implement ext2_fseek() that can that
 	//r = fseek(f_dev, inode_tbl_block*BLOCK_SIZE + inode_local_num*sizeof(Ext2Inode), SEEK_SET);
 	r = fseek(f_dev, inode_tbl_block*BLOCK_SIZE, SEEK_SET);
 	for(int i = 0; i <= inode_local_num + 1; ++i)
-		r = fread(&inode, sizeof(inode), 1, f_dev);
+		r = fread(&inode, sizeof(Ext2Inode), 1, f_dev);
+
+}
+
+void ReadInodeData(int inode_num, char* &data)
+{
+	Ext2Inode inode;
+	ReadInodeStruct(inode_num, inode);
+
+	int data_size = inode.i_size;
+	data = new char[data_size];
+
+	//only direct links
+	int cur = 0, size = 0;
+	for(int i = 0; i < 13 && cur < data_size; ++i)
+	{
+		UInt32 block = inode.i_block[i];
+		if(data_size - cur > BLOCK_SIZE) 
+			size = BLOCK_SIZE;
+		else 
+			size = data_size - cur;
+
+		fseek(f_dev, BLOCK_SIZE*block, SEEK_SET);
+		fread(data + cur, 1, size, f_dev);
+		cur += size;
+	}
+}
+
+void ReadDir(int inode_num)
+{
+	Ext2DirEntry *direntry;
+	char *data;
+	ReadInodeData(inode_num, (char *)data);
+	direntry = (Ext2DirEntry *)data;
+	while(direntry->rec_len)
+	{
+		//printf("%s", 
+	}
+
 }
 
 void main()
 {
 	try
 	{
-		ReadFromDev(device_name, 1024*512);
+		//ReadFromDev(device_name, 4096*512);
 		OpenDevice(device_name);
 		ReadSupeblock(SuperBlock);
 		ReadGroupDescriptorTable(GrpDscrTbl);
 		
-		ReadInode(2);
+		ReadDir(2);
 
 
 		CloseDevice();

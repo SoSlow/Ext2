@@ -112,3 +112,10 @@ typedef struct
     } osd2;                         /* OS dependent 2 */
 }Ext2Inode;
 
+typedef struct 
+{
+	UInt32   inode;                  /* Inode number */
+	UInt16   rec_len;                /* Directory entry length */
+	UInt16   name_len;               /* Name length */
+	char    name[256];    /* File name */
+}Ext2DirEntry;
