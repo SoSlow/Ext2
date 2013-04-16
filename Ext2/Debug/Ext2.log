@@ -1,24 +1,26 @@
-﻿Построение начато 16.04.2013 1:30:42.
+﻿Построение начато 16.04.2013 20:01:19.
      1>Проект "E:\Projects\GitHub\Ext2\Ext2\Ext2.vcxproj" в узле 2 (целевые объекты build).
      1>InitializeBuildStatus:
          Создание "Debug\Ext2.unsuccessfulbuild", так как было задано "AlwaysCreate".
        ClCompile:
          C:\Program Files\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt main.cpp
          main.cpp
-     1>e:\projects\github\ext2\ext2\main.cpp(23): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+     1>e:\projects\github\ext2\ext2\main.cpp(21): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+                 c:\program files\microsoft visual studio 10.0\vc\include\stdio.h(234): см. объявление "fopen"
+     1>e:\projects\github\ext2\ext2\main.cpp(34): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
                  c:\program files\microsoft visual studio 10.0\vc\include\stdio.h(234): см. объявление "fopen"
      1>e:\projects\github\ext2\ext2\main.cpp(35): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
                  c:\program files\microsoft visual studio 10.0\vc\include\stdio.h(234): см. объявление "fopen"
-     1>e:\projects\github\ext2\ext2\main.cpp(36): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-                 c:\program files\microsoft visual studio 10.0\vc\include\stdio.h(234): см. объявление "fopen"
-     1>e:\projects\github\ext2\ext2\main.cpp(37): warning C4101: r: неиспользованная локальная переменная
-     1>e:\projects\github\ext2\ext2\main.cpp(106): warning C4018: >: несоответствие типов со знаком и без знака
-     1>e:\projects\github\ext2\ext2\main.cpp(120): warning C4101: next_data: неиспользованная локальная переменная
-     1>e:\projects\github\ext2\ext2\main.cpp(192): warning C4996: 'strncpy': This function or variable may be unsafe. Consider using strncpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+     1>e:\projects\github\ext2\ext2\main.cpp(36): warning C4101: r: неиспользованная локальная переменная
+     1>e:\projects\github\ext2\ext2\main.cpp(105): warning C4018: >: несоответствие типов со знаком и без знака
+     1>e:\projects\github\ext2\ext2\main.cpp(119): warning C4101: next_data: неиспользованная локальная переменная
+     1>e:\projects\github\ext2\ext2\main.cpp(191): warning C4996: 'strncpy': This function or variable may be unsafe. Consider using strncpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
                  c:\program files\microsoft visual studio 10.0\vc\include\string.h(188): см. объявление "strncpy"
-     1>e:\projects\github\ext2\ext2\main.cpp(260): warning C4996: 'ctime': This function or variable may be unsafe. Consider using ctime_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+     1>e:\projects\github\ext2\ext2\main.cpp(259): warning C4996: 'ctime': This function or variable may be unsafe. Consider using ctime_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
                  c:\program files\microsoft visual studio 10.0\vc\include\time.inl(86): см. объявление "ctime"
-     1>e:\projects\github\ext2\ext2\main.cpp(293): warning C4996: 'strncpy': This function or variable may be unsafe. Consider using strncpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+     1>e:\projects\github\ext2\ext2\main.cpp(289): warning C4996: 'strncpy': This function or variable may be unsafe. Consider using strncpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+                 c:\program files\microsoft visual studio 10.0\vc\include\string.h(188): см. объявление "strncpy"
+     1>e:\projects\github\ext2\ext2\main.cpp(336): warning C4996: 'strncpy': This function or variable may be unsafe. Consider using strncpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
                  c:\program files\microsoft visual studio 10.0\vc\include\string.h(188): см. объявление "strncpy"
        ManifestResourceCompile:
          Для всех выходных данных обновления не требуется.
@@ -38,4 +40,4 @@
 
 Построение успешно завершено.
 
-Затраченное время: 00:00:01.14
+Затраченное время: 00:00:00.84

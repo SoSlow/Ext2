@@ -266,34 +266,51 @@ void Ext2ls(char *path)
 	}
 	else
 	{
-		printf("Error. Directory \"%s\" not found\n");
+		printf("Error. Directory \"%s\" not found\n", path);
 		return;
 	}
 }
 
-void Ext2Cat(const char *path)
+void Ext2Cat(char *path)
 {
-	int size, pos = -1;
-	char *dir_path, *file_name, *data;
-	int i = 0;
-	for(; path[i]; ++i)
+	int size, len;
+	char dir_path[256], *file_name, *data;
+	
+	file_name = strrchr(path, '\\');
+	if(file_name == NULL)
 	{
-		if(path[i] == '\\')
-			pos = i;			
+		printf("Error. Path \"%s\" has bad format\n", path);
+		return;
 	}
-	strncpy(dir_path, path, pos - 1);
-	strncpy(file_name, &path[i], i - pos);
+	//TODO: error handling may be changed to raise ecxeption
+
+
+	len = file_name - path + 1;
+	strncpy(dir_path, path, len);
+	dir_path[len] = '\0';
+	
+	//skip '/' char
+	++file_name;
+
 	int dir_inode = GetDirInodeByName(dir_path);
 	if(dir_inode != -1)
 	{
 		int file_inode = GetFileInode(dir_inode, file_name);
-		ReadInodeData(dir_inode, (char *)data, size);
-		printf("s", data);
-		delete data;
+		if(file_inode != -1)
+		{
+			ReadInodeData(file_inode, (char *)data, size);
+			fwrite(data, 1, size, stdout);
+			delete data;
+		}
+		else
+		{
+			printf("Error. File \"%s\" not found\n", file_name);
+			return;
+		}
 	}
 	else
 	{
-		printf("Error. Directory \"%s\" not found\n");
+		printf("Error. Dir \"%s\" not found\n", dir_path);
 		return;
 	}
 }
@@ -320,7 +337,7 @@ void main()
 		buf[size] = '\0';
 		printf("%s\n", buf);
 		Ext2ls("\\");
-		Ext2Cat("H");
+		Ext2Cat("\\hello.txt");
 
 		CloseDevice();
 	}catch(...)
