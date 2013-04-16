@@ -39,14 +39,12 @@ typedef struct
 	UInt32   s_reserved[256*2+233];  /* Padding to the end of the block */
 } Ext2SuperBlock;
 
-const UInt16 INODE_TYPE_SYMBOL_LINK = 0xA000; //символическая ссылка;
+const UInt16 INODE_TYPE_SYMBOL_LINK = 0xA000; //символьная ссылка;
 const UInt16 INODE_TYPE_FILE = 0x8000; //обычный файл;
 const UInt16 INODE_TYPE_DEV = 0x6000; //файл блочного устройства;
 const UInt16 INODE_TYPE_DIRECTORY = 0x4000; //каталог;
 const UInt16 INODE_TYPE_CHAR_DEV = 0x2000; //файл символьного устройства;
 const UInt16 INODE_TYPE_FIFO = 0x1000; //канал FIFO.
-
-
 
 typedef struct 
 {
@@ -59,7 +57,6 @@ typedef struct
 	UInt16   bg_pad;
 	UInt32   bg_reserved[3];
 }Ext2GroupDescriptor;
-
 
 typedef struct
 {
@@ -114,7 +111,6 @@ typedef struct
     } osd2;                         /* OS dependent 2 */
 }Ext2Inode;
 
-
 //Defined Reserved InodesConstant Name	Value	Description
 const UInt32 EXT2_BAD_INO			= 1;//	bad blocks inode
 const UInt32 EXT2_ROOT_INO 			= 2;//	root directory inode
@@ -122,8 +118,6 @@ const UInt32 EXT2_ACL_IDX_INO		= 3;//	ACL index inode (deprecated?)
 const UInt32 EXT2_ACL_DATA_INO		= 4;//	ACL data inode (deprecated?)
 const UInt32 EXT2_BOOT_LOADER_INO	= 5;//	boot loader inode
 const UInt32 EXT2_UNDEL_DIR_INO		= 6;//	undelete directory inode
-
-
 
 typedef struct 
 {

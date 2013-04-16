@@ -16,8 +16,6 @@ UInt32 BLOCK_SIZE = 0;
 const UInt32 DEVICE_BLOCK_SIZE = 512;
 const char* device_name = "\\\\.\\O:";
 
-
-
 void OpenDevice(const char *dev_name)
 {
 	f_dev = fopen(dev_name, "rb");
@@ -29,6 +27,7 @@ void CloseDevice()
 	fclose(f_dev);	
 }
 
+//read first "count" bytes from device and save them to file ext2.txt in project directory
 void ReadFromDev(const char *dev_name, int count)
 {
 	char *buf = new char[count];
@@ -50,6 +49,7 @@ void ReadSupeblock(Ext2SuperBlock &SuperBlock)
 	r = fseek(f_dev, 1024, SEEK_SET);
 	r = fread(&SuperBlock, sizeof(Ext2SuperBlock), 1, f_dev);
 	//printf("Readed %d bytes", r);	
+	//The block size is computed using this 32bit value as the number of bits to shift left the value 1024
 	BLOCK_SIZE = 1024 << SuperBlock.s_log_block_size;
 }
 
@@ -59,8 +59,7 @@ void ReadGroupDescriptorTable(Ext2GroupDescriptor* &GrpDscrTbl)
 		delete GrpDscrTbl;
 	int gd_count = SuperBlock.s_blocks_count/SuperBlock.s_blocks_per_group + 1;
 	GrpDscrTbl = new Ext2GroupDescriptor[gd_count];
-	
-	//skip some device blocks to archive right GroupDescriptor
+	//skip SuperBlock to archive right GroupDescriptor
 	int pos = (SuperBlock.s_first_data_block + 1)*BLOCK_SIZE;
 	int r = fseek(f_dev, pos, SEEK_SET);
 	fread(GrpDscrTbl, sizeof(Ext2GroupDescriptor), gd_count, f_dev);
@@ -72,7 +71,7 @@ void ReadInodeStruct(int inode_num, Ext2Inode &inode)
 	int group_num = (inode_num - 1) / SuperBlock.s_inodes_per_group;
 	int inode_local_num = (inode_num - 1) % SuperBlock.s_inodes_per_group;
 	int inode_tbl_block = GrpDscrTbl[group_num].bg_inode_table;
-	
+
 	//fseek does't work with value that not divided by 512 (DEVICE_BLOCK_SIZE)
 	//TODO: implement ext2_fseek() that can that
 	//r = fseek(f_dev, inode_tbl_block*BLOCK_SIZE + inode_local_num*sizeof(Ext2Inode), SEEK_SET);
@@ -81,7 +80,7 @@ void ReadInodeStruct(int inode_num, Ext2Inode &inode)
 	char *ibuf = new char[SuperBlock.s_inode_size];
 	for(int i = 0; i <= inode_local_num; ++i)
 	{
-		//cose inode size may be different, read them into buffer and copy to our 128bit structure
+		//cause inode size may be different, read them into buffer and copy to our 128bit structure
 		//TODO: not stupid implementation of this
 		r = fread(ibuf, SuperBlock.s_inode_size, 1, f_dev);
 	}
@@ -126,7 +125,7 @@ void ReadDir(int inode_num)
 	while(direntry->file_type < 8)
 	{
 		char fname[255];
-		
+
 		memcpy(fname, direntry->name, direntry->name_len);
 		fname[direntry->name_len] = 0;
 
@@ -134,7 +133,7 @@ void ReadDir(int inode_num)
 		ReadInodeStruct(direntry->inode, inode);
 
 		printf("%s \t%s\n", fname, direntry->file_type == EXT2_FT_DIR ? "DIR": "FILE");
-		
+
 		//go to the next dir entry in direntry linked list
 		direntry = (Ext2DirEntry *)((char *)direntry + direntry->rec_len);
 	}
@@ -174,7 +173,7 @@ int GetDirInodeByName(char *path)
 	char dir[255];
 	char *first, *sec;
 	int dir_inode = EXT2_ROOT_INO;
-	
+
 	first = path;
 	while(dir_inode != -1)
 	{
@@ -190,13 +189,13 @@ int GetDirInodeByName(char *path)
 			sec = first + strlen(first);
 		}
 		strncpy(dir, first + 1, sec - first);
-		
+
 		first = sec;
 		if(strlen(dir) == 0) continue;
 
 		dir_inode = GetSubdirInode(dir_inode, dir);		
 	}
-	
+
 	return dir_inode;
 }
 
@@ -252,7 +251,7 @@ void Ext2ls(char *path)
 		{
 			char fname[255];
 			Ext2Inode inode;
-			
+
 			memcpy(fname, direntry->name, direntry->name_len);
 			fname[direntry->name_len] = 0;
 
@@ -272,6 +271,33 @@ void Ext2ls(char *path)
 	}
 }
 
+void Ext2Cat(const char *path)
+{
+	int size, pos = -1;
+	char *dir_path, *file_name, *data;
+	int i = 0;
+	for(; path[i]; ++i)
+	{
+		if(path[i] == '\\')
+			pos = i;			
+	}
+	strncpy(dir_path, path, pos - 1);
+	strncpy(file_name, &path[i], i - pos);
+	int dir_inode = GetDirInodeByName(dir_path);
+	if(dir_inode != -1)
+	{
+		int file_inode = GetFileInode(dir_inode, file_name);
+		ReadInodeData(dir_inode, (char *)data, size);
+		printf("s", data);
+		delete data;
+	}
+	else
+	{
+		printf("Error. Directory \"%s\" not found\n");
+		return;
+	}
+}
+
 void main()
 {
 	try
@@ -280,7 +306,7 @@ void main()
 		OpenDevice(device_name);
 		ReadSupeblock(SuperBlock);
 		ReadGroupDescriptorTable(GrpDscrTbl);
-		
+
 		ReadDir(2);
 		int k, size;
 		char buf[255];
@@ -294,6 +320,7 @@ void main()
 		buf[size] = '\0';
 		printf("%s\n", buf);
 		Ext2ls("\\");
+		Ext2Cat("H");
 
 		CloseDevice();
 	}catch(...)
