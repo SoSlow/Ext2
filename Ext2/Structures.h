@@ -6,7 +6,10 @@ typedef  _int32 Int32;
 typedef unsigned _int8 UInt8;
 typedef unsigned _int16 UInt16;
 typedef unsigned _int32 UInt32;
+typedef unsigned _int64 UInt64;
  
+const UInt16 EXT2_SUPER_MAGIC = 0xEF53;
+
 typedef struct
 {
 	UInt32   s_inodes_count;         /* Inodes count */
