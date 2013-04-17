@@ -24,7 +24,8 @@ void OpenDevice(const char *dev_name)
 
 void CloseDevice()
 {
-	fclose(f_dev);	
+	fclose(f_dev);
+	delete GrpDscrTbl;
 }
 
 //read first "count" bytes from device and save them to file ext2.txt in project directory
@@ -186,9 +187,11 @@ int GetDirInodeByName(char *path)
 
 		if(sec == NULL)
 		{
-			sec = first + strlen(first);
+			sec = first + strlen(first) + 1;
 		}
+		int len = sec - first - 1;
 		strncpy(dir, first + 1, sec - first);
+		dir[len] = '\0';
 
 		first = sec;
 		if(strlen(dir) == 0) continue;
@@ -244,6 +247,8 @@ void Ext2ls(char *path)
 
 		ReadInodeData(dir_inode, (char *)data, size);
 		direntry = (Ext2DirEntry *)data;
+		
+		printf("\n\n\t\tFolder: %s\n\n\n", path);
 		printf("%16s%16s\t%s\n", "Name", "Lehgth", "Modification time");
 		printf("%16s%16s\t%s\n", "====", "======", "=================");
 		printf("\n");
@@ -337,7 +342,8 @@ void main()
 		buf[size] = '\0';
 		printf("%s\n", buf);
 		Ext2ls("\\");
-		Ext2Cat("\\hello.txt");
+		Ext2ls("\\Test\\SubDir\\");
+		Ext2Cat("\\Test\\SubDir\\file.txt");
 
 		CloseDevice();
 	}catch(...)
