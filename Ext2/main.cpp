@@ -130,34 +130,6 @@ void ReadInodeData(UInt32 inode_num, char* &data, UInt32 &d_size)
 	d_size = data_size;
 }
 
-void ReadDir(UInt32 inode_num)
-{	
-	char *data, next_data;
-	UInt32 size;
-	Ext2DirEntry *direntry;
-
-	ReadInodeData(inode_num, (char *)data, size);
-	direntry = (Ext2DirEntry *)data;
-	while(direntry->name_len > 0)
-	{
-		char fname[255];
-
-		memcpy(fname, direntry->name, direntry->name_len);
-		fname[direntry->name_len] = 0;
-
-		Ext2Inode inode;
-		ReadInodeStruct(direntry->inode, inode);
-
-		printf("%s \t%s\n", fname, direntry->file_type == EXT2_FT_DIR ? "DIR": "FILE");
-
-		if((char *)direntry - data + direntry->rec_len >= size)
-			break;
-		//go to the next dir entry in direntry linked list
-		direntry = (Ext2DirEntry *)((char *)direntry + direntry->rec_len);
-	}
-	delete data;
-}
-
 UInt32 GetSubdirInode(UInt32 dir_inode, const char *subdir_name)
 {
 	char *data;
@@ -189,6 +161,7 @@ UInt32 GetSubdirInode(UInt32 dir_inode, const char *subdir_name)
 
 	return res;
 }
+
 UInt32 GetDirInodeByName(char *path)
 {
 	char dir[255];
@@ -207,7 +180,7 @@ UInt32 GetDirInodeByName(char *path)
 		}
 		//skip '/' char
 		++first;
-		//find the second 'char' position
+		//find the second '/' char position
 		sec = strchr(first, '/');
 
 		if(sec == NULL)
@@ -222,7 +195,7 @@ UInt32 GetDirInodeByName(char *path)
 		if(strlen(dir) == 0) continue;
 
 		dir_inode = GetSubdirInode(dir_inode, dir);		
-	}while(dir_inode != 0 && sec != NULL); //exit if no '/' found or dir does not exist
+	}while(dir_inode != 0 && sec != NULL); //exit if no '/' char found or dir does not exist
 
 	return dir_inode;
 }
@@ -290,6 +263,7 @@ void RightsToString(UInt16 rights, char *buf)
 void Ext2ls(char *path)
 {	
 	char c_path[512];
+	//checkin' path in corectness. If it's empty or local then use current dir
 	if(path == NULL)
 		strcpy(c_path, GetCurrentDirC());
 	else
@@ -349,11 +323,11 @@ void Ext2ls(char *path)
 	}
 }
 
-void Ext2Cat(char *path)
+void Ext2cat(char *path)
 {
 	UInt32 size, len;
 	char dir_path[256], c_path[512], *file_name, *data;
-	 
+	//chaange path to file in corecness 
 	if(path == NULL)
 	{
 		printf("Error. Not enough actual parametrs.\n\n", path);
@@ -361,13 +335,12 @@ void Ext2Cat(char *path)
 	}
 
 	strcpy(c_path, path);
-	if(path[0] != '/')
+	if(path[0] != '/') //if local file then using current dir
 	{
 		strcpy(c_path, GetCurrentDirC());
 		strcat(c_path, "/");
 		strcat(c_path, path);
 	}
-
 
 	file_name = strrchr(c_path, '/');
 	if(file_name == NULL)
@@ -376,8 +349,7 @@ void Ext2Cat(char *path)
 		return;
 	}
 	//TODO: error handling may be changed to raise ecxeption
-
-
+	
 	len = file_name - c_path + 1;
 	strncpy(dir_path, c_path, len);
 	dir_path[len] = '\0';
@@ -421,7 +393,7 @@ void Ext2cd(char *path)
 		new_dir = path;
 	else
 	{
-		if(new_dir.back() != '/' && path[strlen(path)] != '/') new_dir += "/";
+		if(new_dir.back() != '/') new_dir += "/";
 		new_dir += path;
 	}
 
@@ -448,6 +420,7 @@ void main()
 
 			printf("x-ha][0r $hell  %s>", GetCurrentDirC());			
 			gets(buf);
+
 			arg = strrchr(buf, ' ');
 			if(arg != NULL)
 			{
@@ -458,7 +431,7 @@ void main()
 				Ext2ls(arg);
 			else
 			if(strcmp(buf, "cat") == 0)
-				Ext2Cat(arg);
+				Ext2cat(arg);
 			else
 			if(strcmp(buf, "cd") == 0)
 				Ext2cd(arg);
@@ -467,7 +440,6 @@ void main()
 				break;
 			else
 				printf("Uknown command.\n");
-
 		}
 		CloseDevice();
 	}catch(...)
