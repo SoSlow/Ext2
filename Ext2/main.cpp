@@ -3,8 +3,9 @@
 #include <string.h>
 #include <time.h>
 #include <vector>
+#include <locale>
+#include <windows.h>
 #include "Structures.h"
-
 //global variables, must be replaced by class properties
 FILE *f_dev = NULL;
 
@@ -404,6 +405,105 @@ void Ext2cd(char *path)
 
 }
 
+void mb2ascii(char *s)
+{
+	std::locale russian("Russian");
+	setlocale(LC_ALL, "Russian");
+	switch(s[0])
+    {
+        case ' ': case '!': case '"': case '#': case '%':
+        case '&': case '\'': case '(': case ')': case '*':
+        case '+': case ',': case '-': case '.': case '/':
+        case '0': case '1': case '2': case '3': case '4':
+        case '5': case '6': case '7': case '8': case '9':
+        case ':': case ';': case '<': case '=': case '>':
+        case '?':
+        case 'A': case 'B': case 'C': case 'D': case 'E':
+        case 'F': case 'G': case 'H': case 'I': case 'J':
+        case 'K': case 'L': case 'M': case 'N': case 'O':
+        case 'P': case 'Q': case 'R': case 'S': case 'T':
+        case 'U': case 'V': case 'W': case 'X': case 'Y':
+        case 'Z':
+        case '[': case '\\': case ']': case '^': case '_':
+        case 'a': case 'b': case 'c': case 'd': case 'e':
+        case 'f': case 'g': case 'h': case 'i': case 'j':
+        case 'k': case 'l': case 'm': case 'n': case 'o':
+        case 'p': case 'q': case 'r': case 's': case 't':
+        case 'u': case 'v': case 'w': case 'x': case 'y':
+        case 'z': case '{': case '|': case '}': case '~':
+			return;
+			break;
+		default:
+		{
+			int len = strlen(s);
+
+			wchar_t *tmp = new wchar_t[len];
+
+			MultiByteToWideChar(CP_UTF8, 0, s, len+1, tmp, len+1);
+			
+			//int r = mbstowcs(tmp, s, strlen(s) + 1);
+		
+			std::wstring source(tmp);
+			
+			std::string result(source.begin(), source.end());
+			//wprintf(L"%s", tmp);//(wchar_t *)s, strlen(s)/2)
+			
+			strcpy(s, result.c_str());
+		}
+	}
+}
+
+
+void treeFunc(UInt32 dir_inode, int deep, const char *parent_name)
+{
+	const char *hor_line = "|---/";
+	const char *spc_line = "|   ";
+	char *data;
+	char dir_name[255];
+
+	Ext2DirEntry *direntry;
+	UInt32 size, res = 0;
+
+	if(deep != 0)
+	{
+		for(int i = 0; i < deep-1; ++i)
+			printf("%s", spc_line);
+		//printf("%*s", deep*strlen(hor_line), ;
+		printf("%s%s\n", hor_line, parent_name);
+	}
+
+	ReadInodeData(dir_inode, (char *)data, size);
+	direntry = (Ext2DirEntry *)data;
+
+	while(direntry->name_len > 0)
+	{
+		if(direntry->file_type == EXT2_FT_DIR)
+		{
+			
+			memcpy(dir_name, direntry->name, direntry->name_len);
+			dir_name[direntry->name_len] = 0;
+			if(strcmp(".", dir_name) != 0 && strcmp("..", dir_name) != 0)
+			{
+				//unicode2ascii(dir_name);
+				treeFunc(direntry->inode, deep + 1, dir_name);
+			}
+		}
+		if((char *)direntry - data + direntry->rec_len >= size)
+			break;
+		//go to the next dir entry in direntry linked list		
+		direntry = (Ext2DirEntry *)((char *)direntry + direntry->rec_len);
+	}
+	//free mem
+	delete data;
+}
+
+void Ext2tree()
+{
+	char *c_dir = (char *)GetCurrentDirC();
+	printf("Directory tree \n%s\n", c_dir);
+	treeFunc(GetDirInodeByName(c_dir), 0, "");
+}
+
 void main()
 {
 	try
@@ -421,7 +521,7 @@ void main()
 			printf("x-ha][0r $hell  %s>", GetCurrentDirC());			
 			gets(buf);
 
-			arg = strrchr(buf, ' ');
+			arg = strchr(buf, ' ');
 			if(arg != NULL)
 			{
 				arg[0] = 0;
@@ -436,6 +536,9 @@ void main()
 			if(strcmp(buf, "cd") == 0)
 				Ext2cd(arg);
 			else 
+			if(strcmp(buf, "tree") == 0)
+				Ext2tree();
+			else
 			if(strcmp(buf, "quit") == 0)
 				break;
 			else
